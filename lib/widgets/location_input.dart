@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 
 class LocationInput extends StatefulWidget {
-  const LocationInput({super.key});
+  const LocationInput({super.key, required this.onSelectLocation});
+
+  final void Function(PlaceLocation location) onSelectLocation;
 
   @override
   State<LocationInput> createState() => _LocationInputState();
@@ -12,6 +14,8 @@ class LocationInput extends StatefulWidget {
 class _LocationInputState extends State<LocationInput> {
   PlaceLocation? _pickedLocation;
   var _isGettingLocation = false;
+  var lat;
+  var lng;
 
   void _getCurrentLocation() async {
     Location location = Location();
@@ -41,17 +45,19 @@ class _LocationInputState extends State<LocationInput> {
     });
 
     locationData = await location.getLocation();
-    final lat = locationData.latitude;
-    final lng = locationData.longitude;
+    lat = locationData.latitude;
+    lng = locationData.longitude;
 
-    if(lat == null || lng == null){
+    if (lat == null || lng == null) {
       return;
     }
 
     setState(() {
-      _pickedLocation =PlaceLocation(latitude: lat!, longitute: lng!);
+      _pickedLocation = PlaceLocation(latitude: lat, longitute: lng);
       _isGettingLocation = false;
     });
+
+    widget.onSelectLocation(_pickedLocation!);
   }
 
   @override
@@ -64,7 +70,17 @@ class _LocationInputState extends State<LocationInput> {
           ),
     );
 
-    if(_isGettingLocation){
+    if(_pickedLocation != null){
+      previewContent = Text(
+        '$lat , $lng',
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+      );
+    }
+
+    if (_isGettingLocation) {
       previewContent = const CircularProgressIndicator();
     }
 
@@ -87,7 +103,7 @@ class _LocationInputState extends State<LocationInput> {
           children: [
             TextButton.icon(
               icon: const Icon(Icons.location_on),
-              onPressed:_getCurrentLocation,
+              onPressed: _getCurrentLocation,
               label: const Text('Get Current Location'),
             ),
             TextButton.icon(
